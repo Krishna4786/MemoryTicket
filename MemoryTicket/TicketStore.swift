@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import Combine
 import UIKit
+import CoreLocation
 
 class TicketStore: ObservableObject {
     @Published var tickets: [MemoryTicket] = []
@@ -20,6 +21,10 @@ class TicketStore: ObservableObject {
     func addTicket(_ ticket: MemoryTicket) {
         tickets.insert(ticket, at: 0)
         saveTickets()
+        // Geocode location in background
+        if let locName = ticket.location?.name, !locName.isEmpty {
+            geocode(ticketId: ticket.id, query: locName)
+        }
     }
 
     func deleteTicket(_ ticket: MemoryTicket) {
@@ -83,5 +88,22 @@ class TicketStore: ObservableObject {
     }
     private func docsURL(_ name: String) -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(name)
+    }
+
+    // MARK: - Geocoding
+
+    private func geocode(ticketId: UUID, query: String) {
+        CLGeocoder().geocodeAddressString(query) { placemarks, error in
+            guard let place = placemarks?.first, let coord = place.location?.coordinate else { return }
+            DispatchQueue.main.async {
+                if let idx = self.tickets.firstIndex(where: { $0.id == ticketId }) {
+                    self.tickets[idx].location?.latitude = coord.latitude
+                    self.tickets[idx].location?.longitude = coord.longitude
+                    self.tickets[idx].location?.city = place.locality
+                    self.tickets[idx].location?.country = place.country
+                    self.saveTickets()
+                }
+            }
+        }
     }
 }

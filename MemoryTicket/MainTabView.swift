@@ -28,7 +28,7 @@ struct MainTabView: View {
                 }
                 .tag(2)
 
-            PlaceholderTab(icon: "map.fill", title: "Map", subtitle: "Coming in Phase 3")
+            MemoryMapView()
                 .tabItem {
                     Image(systemName: "map.fill")
                     Text("Map")
