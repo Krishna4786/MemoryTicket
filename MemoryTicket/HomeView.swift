@@ -23,14 +23,11 @@ struct HomeView: View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 20) {
-                    header.padding(.horizontal, 20)
-                    searchBar.padding(.horizontal, 20)
-
                     if store.streakCount > 0 {
-                        streakBadge.stagger(1)
+                        streakBadge.stagger(0)
                     }
 
-                    categoryPills.stagger(2)
+                    categoryPills.stagger(1)
 
                     if filtered.isEmpty {
                         emptyState.padding(.top, 50)
@@ -40,59 +37,53 @@ struct HomeView: View {
 
                     Spacer(minLength: 100)
                 }
-                .padding(.top, 8)
+                .padding(.top, 4)
             }
             .background(TH.bg.ignoresSafeArea())
-            .navigationBarHidden(true)
-        }
-    }
-
-    // MARK: - Header
-
-    private var header: some View {
-        HStack {
-            Text("Memories")
-                .font(.system(size: 30, weight: .bold))
-                .foregroundColor(TH.title)
-            Spacer()
-            Circle()
-                .fill(Color(hex: "E5E7EB"))
-                .frame(width: 38, height: 38)
-                .overlay(
-                    Image(systemName: "person.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(TH.caption)
-                )
-        }
-        .stagger(0)
-    }
-
-    // MARK: - Search
-
-    private var searchBar: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 15))
-                .foregroundColor(TH.caption)
-
-            TextField("Search", text: $searchText)
-                .font(.system(size: 15))
-                .foregroundColor(TH.title)
-
-            if !searchText.isEmpty {
-                Button { searchText = "" } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 15))
-                        .foregroundColor(TH.caption)
+            .navigationTitle("Memories")
+            .navigationBarTitleDisplayMode(.large)
+            .searchable(text: $searchText, prompt: "Search memories")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    avatarView
                 }
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(hex: "E5E7EB").opacity(0.6))
-        )
+    }
+
+    // MARK: - Avatar (matches Profile)
+
+    private var avatarView: some View {
+        Group {
+            if let img = loadAvatar() {
+                Image(uiImage: img)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 32, height: 32)
+                    .clipShape(Circle())
+            } else {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: "C7D2FE"), Color(hex: "A5B4FC")],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.white)
+                    )
+            }
+        }
+    }
+
+    private func loadAvatar() -> UIImage? {
+        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("avatar.jpg")
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return UIImage(data: data)
     }
 
     // MARK: - Streak Badge
@@ -108,10 +99,7 @@ struct HomeView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
-        .background(
-            Capsule()
-                .fill(Color(hex: "FEF3C7"))
-        )
+        .background(Capsule().fill(Color(hex: "FEF3C7")))
     }
 
     // MARK: - Category Pills
@@ -158,7 +146,7 @@ struct HomeView: View {
                     FeedCard(ticket: ticket)
                 }
                 .buttonStyle(CardButtonStyle())
-                .stagger(idx + 3)
+                .stagger(idx + 2)
             }
         }
         .padding(.horizontal, 20)
@@ -187,7 +175,7 @@ struct HomeView: View {
     }
 }
 
-// MARK: - Feed Card (large photo card)
+// MARK: - Feed Card
 
 struct FeedCard: View {
     let ticket: MemoryTicket
@@ -196,7 +184,6 @@ struct FeedCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Photo
             ZStack(alignment: .topTrailing) {
                 if let img = img {
                     Image(uiImage: img)
@@ -230,7 +217,6 @@ struct FeedCard: View {
                 )
             )
 
-            // Info
             VStack(alignment: .leading, spacing: 6) {
                 Text(ticket.title)
                     .font(.system(size: 18, weight: .bold))
