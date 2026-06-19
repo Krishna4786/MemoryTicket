@@ -3,7 +3,6 @@ import SwiftUI
 struct MainTabView: View {
     @EnvironmentObject var store: TicketStore
     @State private var selectedTab = 0
-    @State private var previousTab = 0
     @State private var showCreate = false
 
     var body: some View {
@@ -22,7 +21,6 @@ struct MainTabView: View {
                 }
                 .tag(1)
 
-            // Invisible placeholder — tapping triggers the create sheet
             Color.clear
                 .tabItem {
                     Image(systemName: "plus.circle.fill")
@@ -37,7 +35,7 @@ struct MainTabView: View {
                 }
                 .tag(3)
 
-            PlaceholderTab(icon: "person.fill", title: "Profile", subtitle: "Coming soon")
+            ProfileView()
                 .tabItem {
                     Image(systemName: "person.fill")
                     Text("Profile")
@@ -47,7 +45,6 @@ struct MainTabView: View {
         .tint(TH.accent)
         .onChange(of: selectedTab) { oldVal, newVal in
             if newVal == 2 {
-                // Don't stay on the Create tab — open the sheet and go back
                 selectedTab = oldVal
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 showCreate = true
